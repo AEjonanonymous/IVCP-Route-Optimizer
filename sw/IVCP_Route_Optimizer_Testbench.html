@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IVCP Optimizer (Novel TSP Heuristic)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse-once {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pulse-once {
+            animation: pulse-once 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4 font-sans">
+
+    <div id="app" class="bg-white p-6 md:p-10 shadow-2xl rounded-xl w-full max-w-4xl">
+        <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">
+            IVCP Route Optimizer
+        </h1>
+        <p class="text-gray-600 mb-6">
+            Iterative Value-Centric Perturbation (A Novel TSP Heuristic). Now uses a deterministic 2-Opt method for highly consistent improvements.
+        </p>
+
+        <div id="controls" class="space-y-4 mb-6">
+            <button id="solveButton" 
+                    class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition duration-150 shadow-lg">
+                RUN IVCP ALGORITHM (Optimize Route)
+            </button>
+            <button id="resetButton" 
+                    class="w-full bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 transition duration-150">
+                Reset Cities
+            </button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-indigo-50 p-4 rounded-lg shadow-inner">
+                <h2 class="text-xl font-semibold text-indigo-800 mb-4">City Data (ID, X, Y, Value)</h2>
+                <div id="cityList" class="space-y-2 text-sm max-h-96 overflow-y-auto">
+                    </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-green-100 p-4 rounded-lg shadow-md">
+                    <h2 class="text-xl font-semibold text-green-800 mb-2">Optimization Result</h2>
+                    <p id="resultText" class="text-green-700 font-mono text-lg">Click 'RUN' to solve.</p>
+                </div>
+                
+                <div class="relative bg-gray-100 rounded-lg shadow-md p-4 min-h-64">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2">Route Visualization (Euclidean Map)</h2>
+                    <canvas id="tspCanvas" class="w-full h-full rounded-md border border-gray-300"></canvas>
+                    <div class="text-xs text-gray-500 mt-2">
+                        Map Key: <span class="font-bold text-red-600">Start (Highest Value)</span>, <span class="font-bold text-indigo-600">Route</span>, <span class="font-bold text-gray-800">Stop</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. CORE DATA STRUCTURE ---
+        let cities = [];
+        const MAX_CITIES = 15; 
+
+        function generateRandomCities(num) {
+            const newCities = [];
+            for (let i = 0; i < num; i++) {
+                newCities.push({
+                    id: i,
+                    x: Math.floor(Math.random() * 90) + 5,
+                    y: Math.floor(Math.random() * 90) + 5,
+                    value: Math.floor(Math.random() * 10) + 1, 
+                });
+            }
+            return newCities;
+        }
+
+        // --- 2. CORE UTILITY FUNCTIONS ---
+
+        function calculateDistance(city1, city2) {
+            const dx = city1.x - city2.x;
+            const dy = city2.y - city1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+
+        function calculateRouteDistance(route) {
+            let totalDistance = 0;
+            const N = route.length;
+            if (N < 2) return 0;
+
+            for (let i = 0; i < N; i++) {
+                const city1 = route[i];
+                const city2 = route[(i + 1) % N]; 
+                totalDistance += calculateDistance(city1, city2);
+            }
+            return totalDistance;
+        }
+
+        function copyRoute(route) {
+            return [...route];
+        }
+
+        function reverseSegment(route, i, j) {
+            const start = Math.min(i, j);
+            const end = Math.max(i, j);
+            let newRoute = copyRoute(route);
+            
+            const segment = newRoute.slice(start, end + 1);
+            
+            for(let k = 0; k < segment.length; k++) {
+                newRoute[start + k] = segment[segment.length - 1 - k];
+            }
+            
+            return newRoute;
+        }
+
+
+        // --- 3. IVCP ALGORITHM IMPLEMENTATION ---
+
+        function initialRoute(cities) {
+            if (cities.length === 0) return [];
+            
+            let remainingCities = copyRoute(cities);
+            let startCityIndex = 0;
+            let maxVal = -1;
+            
+            remainingCities.forEach((city, index) => {
+                if (city.value > maxVal) {
+                    maxVal = city.value;
+                    startCityIndex = index;
+                }
+            });
+
+            let currentCity = remainingCities.splice(startCityIndex, 1)[0];
+            let route = [currentCity];
+
+            while (remainingCities.length > 0) {
+                let nearestIndex = -1;
+                let minDistance = Infinity;
+
+                for (let i = 0; i < remainingCities.length; i++) {
+                    const distance = calculateDistance(currentCity, remainingCities[i]);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        nearestIndex = i;
+                    }
+                }
+                currentCity = remainingCities.splice(nearestIndex, 1)[0];
+                route.push(currentCity);
+            }
+
+            return route;
+        }
+
+        function solveIVCP(initialRoute) { 
+            let currentRoute = initialRoute;
+            let N = currentRoute.length;
+            let currentDistance = calculateRouteDistance(currentRoute);
+            let improved = true;
+
+            while (improved) {
+                improved = false;
+                for (let i = 1; i < N - 1; i++) {
+                    for (let j = i + 1; j < N; j++) {
+                        const newRoute = reverseSegment(currentRoute, i, j);
+                        const newDistance = calculateRouteDistance(newRoute);
+
+                        if (newDistance < currentDistance) {
+                            currentDistance = newDistance;
+                            currentRoute = newRoute;
+                            improved = true; 
+                            break; 
+                        }
+                    }
+                    if (improved) break; 
+                }
+            }
+            return currentRoute;
+        }
+
+        // --- 4. UI & CANVAS RENDERING ---
+
+        const canvas = document.getElementById('tspCanvas');
+        const ctx = canvas.getContext('2d');
+        const resultText = document.getElementById('resultText');
+        const cityListDiv = document.getElementById('cityList');
+        const padding = 20;
+
+        function updateCanvasSize() {
+            const container = canvas.parentNode;
+            canvas.width = container.clientWidth;
+            canvas.height = 400; 
+            if (cities.length > 0) {
+                drawRoute(cities);
+            }
+        }
+
+        window.addEventListener('resize', updateCanvasSize);
+
+        function drawRoute(route) {
+            const W = canvas.width;
+            const H = canvas.height;
+            ctx.clearRect(0, 0, W, H);
+            
+            let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+            cities.forEach(c => {
+                minX = Math.min(minX, c.x);
+                minY = Math.min(minY, c.y);
+                maxX = Math.max(maxX, c.x);
+                maxY = Math.max(maxY, c.y);
+            });
+            const scaleX = (W - 2 * padding) / (maxX - minX || 1);
+            const scaleY = (H - 2 * padding) / (maxY - minY || 1);
+            const scale = Math.min(scaleX, scaleY) * 0.9; 
+
+            const transform = (c) => ({
+                X: (c.x - minX) * scale + padding + (W - (maxX - minX) * scale) / 2,
+                Y: (H - padding) - (c.y - minY) * scale - (H - (maxY - minY) * scale) / 2 
+            });
+
+            if (route.length > 1) {
+                ctx.beginPath();
+                let prevScreenCoord = transform(route[0]);
+                ctx.moveTo(prevScreenCoord.X, prevScreenCoord.Y);
+
+                for (let i = 1; i < route.length; i++) {
+                    const currentScreenCoord = transform(route[i]);
+                    ctx.lineTo(currentScreenCoord.X, currentScreenCoord.Y);
+                }
+                let startScreenCoord = transform(route[0]);
+                ctx.lineTo(startScreenCoord.X, startScreenCoord.Y);
+                
+                ctx.strokeStyle = '#4f46e5'; 
+                ctx.lineWidth = 3; 
+                ctx.stroke();
+            }
+
+            route.forEach((city, index) => {
+                const screenCoord = transform(city);
+                const isStart = index === 0;
+                
+                ctx.beginPath();
+                ctx.arc(screenCoord.X, screenCoord.Y, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = isStart ? '#dc2626' : '#1f2937'; 
+                ctx.fill();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.fillStyle = '#111827';
+                ctx.font = '10px Inter, sans-serif';
+                const label = `${city.id} (V:${city.value}, ${city.x}, ${city.y})`; 
+                ctx.fillText(label, screenCoord.X + 8, screenCoord.Y + 4);
+            });
+        }
+
+        function renderCityList(route = cities) {
+            cityListDiv.innerHTML = route.map(city => {
+                let colorClass = 'bg-gray-100';
+                if (city.value > 7) colorClass = 'bg-red-200';
+                else if (city.value < 3) colorClass = 'bg-blue-200';
+
+                return `
+                    <div class="flex justify-between items-center p-2 rounded-md ${colorClass} text-xs font-mono">
+                        <span class="font-bold">ID ${city.id}</span>
+                        <span>X: ${city.x} | Y: ${city.y}</span>
+                        <span class="font-bold">Value: ${city.value}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        document.getElementById('resetButton').addEventListener('click', () => {
+            cities = generateRandomCities(MAX_CITIES);
+            renderCityList(cities);
+            drawRoute([]); 
+            resultText.textContent = "Click 'RUN' to solve.";
+            document.getElementById('solveButton').classList.remove('pulse-once');
+        });
+
+document.getElementById('solveButton').addEventListener('click', async () => {
+    const btn = document.getElementById('solveButton');
+    const resultText = document.getElementById('resultText');
+    btn.disabled = true;
+
+    let totalInitialDist = 0;
+    let totalFinalDist = 0;
+    const iterations = 100;
+
+    for (let i = 0; i < iterations; i++) {
+        // 1. High Variance: Randomize nodes (5-50) and map scale (50-150)
+        const randomNodes = Math.floor(Math.random() * 46) + 5;
+        const randomScale = Math.floor(Math.random() * 101) + 50;
+        
+        cities = generateRandomCities(randomNodes, randomScale);
+        
+        const initialPath = initialRoute(cities);
+        const initialDist = calculateRouteDistance(initialPath);
+        
+        const optimizedPath = solveIVCP(initialPath);
+        const finalDist = calculateRouteDistance(optimizedPath);
+        
+        // Accumulate data for true Net Performance
+        totalInitialDist += initialDist;
+        totalFinalDist += finalDist;
+
+        // --- THE FIX: UPDATE BOTH VIEWPORTS ---
+        btn.textContent = `Map ${i + 1}/100`;
+        
+        // Update the visual Map (Euclidean Plane)
+        drawRoute(optimizedPath);
+        
+        // Update the City Data List (Text Panel on Left)
+        renderCityList(optimizedPath);
+        
+        // Update results with Net Performance
+        const netGain = ((totalInitialDist - totalFinalDist) / totalInitialDist) * 100;
+        resultText.innerHTML = `
+            Cities: <span class="text-indigo-700 font-bold">${randomNodes}</span> | Scale: <span class="text-indigo-700 font-bold">${randomScale}</span><br>
+            Net Efficiency Gain: <span class="text-green-800 font-bold">${netGain.toFixed(2)}%</span>
+        `;
+        
+        // Pause for 20ms so you can actually see the data and map change
+        await new Promise(r => setTimeout(r, 20));
+    }
+
+    btn.textContent = 'RUN IVCP ALGORITHM (Optimize Route)';
+    btn.disabled = false;
+    btn.classList.add('pulse-once');
+});
+
+        window.onload = () => {
+            document.getElementById('resetButton').click(); 
+            updateCanvasSize();
+        };
+    </script>
+</body>
+</html>
