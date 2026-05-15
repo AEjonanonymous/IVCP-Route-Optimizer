@@ -1,0 +1,10 @@
+{
+  "name": "ivcp-route-optimizer",
+  "version": "1.0.0",
+  "description": "High-performance Value-Centric TSP heuristic for logistics.",
+  "main": "sw/ivcp_engine.js",
+  "type": "module",
+  "author": "Jonathan f(n) Reed",
+  "license": "AGPL-3.0-only",
+  "keywords": ["tsp", "logistics", "optimization", "vrp", "2-opt"]
+}
