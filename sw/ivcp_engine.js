@@ -1,6 +1,7 @@
 /**
  * IVCP Route Optimization Engine
  * Iterative Value-Centric Perturbation + 2-Opt Local Search
+ * Published under the GNU Affero General Public License (AGPL-3.0) 
  */
 
 export class IVCPOptimizer {
