@@ -1,10 +1,10 @@
 # <div align="center">IVCP Route Optimizer
 ## Iterative Value-Centric Perturbation: A High-Performance TSP JavaScript Engine for Edge Devices
 
-### 1. Overview
+### 1. Overview & Repository Contents 
 The IVCP Route Optimizer is a novel heuristic engine designed to solve the Traveling Salesperson Problem (TSP) under priority-based constraints. Unlike standard solvers that treat every stop equally, IVCP utilizes a Value-Centric approach to ensure the most critical asset is handled first, followed by a deterministic refinement process to minimize total distance.
 
-### 2. Key Commercial Advantages
+### 2. Key Commercial Advantages 
 * **Offline-Ready (Edge First):** Designed for local execution on handheld devices, scanners, and IoT hardware. No internet connection or costly API calls to Google/Mapbox are required for the optimization.
 * **Significant Efficiency Gains:** Benchmarked at a 13.26% Net Efficiency Gain over standard greedy dispatchers in high-variance environments.
 * **Operational Priority:** Guaranteed initiation at the node with the highest priority value ($$\text{argmax}(V)$$), making it ideal for express deliveries or high-value logistics.
@@ -34,14 +34,24 @@ const finalRoute = optimizer.optimize(initial);
 console.log("Optimized Sequence:", finalRoute.map(s => s.id));
 
 ```
-### 5. Performance Benchmarks
+### 5. Performance Benchmarks 
 Tested over 100 iterations with variable node density ($5 \le N \le 50$):
 * **Average Efficiency Improvement:** 13.26%.
 * **Target Hardware:** Mobile handhelds, edge gateways, and low-power IoT devices.
 
-### 6. Licensing & Commercial Use
-This software is currently released under a Proprietary License.
-* **Researchers:** Contact the author for academic collaboration.
+### ⚖️ Licensing & Commercial Use ⚖️
+The IVCP Route Optimizer is available under a dual-licensing model to balance community innovation with high-performance commerical route optimization needs.
+
+* **Open Source (AGPL-3.0):** Ideal for public research, open-source infrastructure, and community-driven projects. This license requires that any derivative works or network-hosted versions of the engine remain open-source.
 * **Commercial Entities:** Licensing is available for integration into proprietary edge devices and logistics applications.
 
-**Author** Jonathan f(n) Reed ORCID: 0009-0008-7345-1407
+For commercial licensing inquiries, please contact: 
+**Licensing Agent**: 
+
+J.E. Randolph 📧 `700josh.r@gmail.com`
+
+---
+
+Copyright (c) 2026 Jonathan Alan Reed 
+
+[ORCID: 0009-0008-7345-1407](https://orcid.org/0009-0008-7345-1407)
