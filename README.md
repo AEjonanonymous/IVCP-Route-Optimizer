@@ -1,8 +1,12 @@
-# <div align="center">IVCP Route Optimizer
+# <div align="center"> 🚚 IVCP Route Optimizer 
 ## Iterative Value-Centric Perturbation: A High-Performance TSP JavaScript Engine for Edge Devices
 
 ### 1. Overview & Repository Contents 
 The IVCP Route Optimizer is a novel heuristic engine designed to solve the Traveling Salesperson Problem (TSP) under priority-based constraints. Unlike standard solvers that treat every stop equally, IVCP utilizes a Value-Centric approach to ensure the most critical asset is handled first, followed by a deterministic refinement process to minimize total distance.
+
+* 📝 **`Technical Note - IVCP Route Optimizer - Google Docs.pdf`**: The full technical note detailing the toroidal projection methodology and the analytical derivation of the drift equation.
+* 💻 **`ivcp_engine.js`**: Lean 4 source code containing the formal definitions, the unit-triangle clique verification, and the final collision theorem.
+* ⚙️ **`IVCP_Route_Optimizer_Testbench.html`**: Lean 4 source code containing the formal definitions, the unit-triangle clique verification, and the final collision theorem.
 
 ### 2. Key Commercial Advantages 
 * **Offline-Ready (Edge First):** Designed for local execution on handheld devices, scanners, and IoT hardware. No internet connection or costly API calls to Google/Mapbox are required for the optimization.
