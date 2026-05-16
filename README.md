@@ -1,4 +1,4 @@
-# <div align="center">📍🗺️ IVCP Route Optimizer 🗺️📍
+# <div align="center">📍🚚 IVCP Route Optimizer 🗺️📍
 ## <div align="center"><i>Iterative Value-Centric Perturbation: A High-Performance TSP JavaScript Engine for Edge Devices</i>
 
 ### 1. Overview & Repository Contents 
