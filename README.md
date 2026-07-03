@@ -44,7 +44,7 @@ Tested over 100 iterations with variable node density ($5 \le N \le 50$):
 * **Target Hardware:** Mobile handhelds, edge gateways, and low-power IoT devices.   
 
 ### ⚖️ Licensing & Commercial Use ⚖️
-The IVCP Route Optimizer is available under a dual-licensing model to balance community innovation with high-performance commerical route optimization needs.
+The IVCP Route Optimizer is available under a dual-licensing model to balance community innovation with high-performance commercial route optimization needs.
 
 * **Open Source (AGPL-3.0):** Ideal for public research, open-source infrastructure, and community-driven projects. This license requires that any derivative works or network-hosted versions of the engine remain open-source.
 * **Commercial Entities:** Licensing is available for integration into proprietary edge devices and logistics applications.
